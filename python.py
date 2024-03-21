@@ -2,9 +2,9 @@ import streamlit as st
 from neo4j import GraphDatabase
 
 # Neo4j connection parameters
-uri = "neo4j+s://dba86135.databases.neo4j.io"
+uri = "neo4j+s://722a0a63.databases.neo4j.io:7687"
 user = "neo4j"
-password = "_B66GrNLR3uk6AZ8SA9hKewOGxLyJK4J8q7rt8d9q00"
+password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
@@ -51,7 +51,7 @@ def search_whole_team(driver):
 
 # Streamlit app
 def main():
-    st.title("College Football Graph Explorer")
+    st.title("AithELITE Coach Helper")
 
     # Neo4j connection
     driver = connect_to_neo4j(uri, user, password)
