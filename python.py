@@ -80,6 +80,34 @@ def search_whole_team(driver):
     st.write("You selected 'Search Whole Team'.")
     # Your code for searching the whole team goes here
 
+def find_player_hometown(driver):
+    st.write("You selected 'Find Player's Hometown'.")
+
+    # Retrieve player names from Neo4j
+    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    result_list = run_neo4j_query(driver, query)
+
+    # Extract player names from the result
+    player_names = [record['name'] for record in result_list]
+
+    # Dropdown to select a player
+    player_name = st.selectbox('Select a Player', player_names)
+
+    # Adjusted query to retrieve the player's home_town_id property
+    hometown_query = f"""
+    MATCH (p:Player {{name: '{player_name}'}})
+    RETURN p.home_town_id AS hometown
+    """
+    hometown_result = run_neo4j_query(driver, hometown_query)
+
+    # Extract and display the hometown if available
+    if hometown_result:
+        hometown = hometown_result[0]['hometown']
+        st.write(f"### {player_name}'s Hometown: {hometown}")
+    else:
+        st.write("Hometown not found.")
+
+
 # Streamlit app
 def main():
     st.title("AithELITE Coach Helper")
@@ -88,7 +116,10 @@ def main():
     driver = connect_to_neo4j(uri, user, password)
 
     # Dropdown menu to select action
-    action = st.selectbox("Select an action", ["Compare 2 Players", "Find Specific Stat", "Search Whole Team"])
+    action = st.selectbox(
+        "Select an action",
+        ["Compare 2 Players", "Find Specific Stat", "Search Whole Team", "Find Player's Hometown"]
+    )
 
     if action == "Compare 2 Players":
         compare_players(driver)
@@ -96,6 +127,8 @@ def main():
         find_specific_stat(driver)
     elif action == "Search Whole Team":
         search_whole_team(driver)
+    elif action == "Find Player's Hometown":
+        find_player_hometown(driver)
 
 if __name__ == "__main__":
     main()
