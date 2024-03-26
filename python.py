@@ -77,7 +77,6 @@ def find_specific_stat(driver):
 
 # Function to display school roster
 def display_school_roster(driver):
-    def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
     # Step 1: Select a School
