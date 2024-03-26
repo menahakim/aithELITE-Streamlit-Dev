@@ -75,10 +75,35 @@ def find_specific_stat(driver):
     st.write("You selected 'Find Specific Stat'.")
     # Your code for finding specific stats goes here
 
-# Function to search the whole team
-def search_whole_team(driver):
-    st.write("You selected 'Search Whole Team'.")
-    # Your code for searching the whole team goes here
+# Function to display school roster
+def display_school_roster(driver):
+    st.write("You selected 'Display School Roster'.")
+
+    # Retrieve school names from Neo4j
+    school_query = "MATCH (s:School) RETURN s.name AS name ORDER BY name"
+    school_result_list = run_neo4j_query(driver, school_query)
+
+    # Extract school names from the result
+    school_names = [record['name'] for record in school_result_list]
+
+    # Dropdown to select a school
+    selected_school = st.selectbox('Select a School', school_names)
+
+    # Query to find the players on the roster of the selected school
+    roster_query = f"""
+    MATCH (s:School {{name: '{selected_school}'}})<-[:ON_ROSTER]-(p:Player)
+    RETURN p.name AS player_name ORDER BY player_name
+    """
+    roster_result = run_neo4j_query(driver, roster_query)
+
+    # Display the roster
+    if roster_result:
+        st.write(f"### Roster for {selected_school}:")
+        for record in roster_result:
+            st.write(f"- {record['name']}")
+    else:
+        st.write("No players found on this school's roster.")
+
 
 def find_player_hometown(driver):
     st.write("You selected 'Find Player's Hometown'.")
@@ -118,14 +143,14 @@ def main():
     # Dropdown menu to select action
     action = st.selectbox(
         "Select an action",
-        ["Compare 2 Players", "Find Specific Stat", "Search Whole Team", "Find Player's Hometown"]
+        ["Compare 2 Players", "Find Specific Stat", "Display School Roster", "Find Player's Hometown"]
     )
 
     if action == "Compare 2 Players":
         compare_players(driver)
     elif action == "Find Specific Stat":
         find_specific_stat(driver)
-    elif action == "Search Whole Team":
+    elif action == "Display School Roster":
         search_whole_team(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
