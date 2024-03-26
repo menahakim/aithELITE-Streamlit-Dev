@@ -77,32 +77,36 @@ def find_specific_stat(driver):
 
 # Function to display school roster
 def display_school_roster(driver):
+    def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
-    # Retrieve school names from Neo4j
-    season_query = "MATCH (s:Season) RETURN s.name AS name ORDER BY name"
-    season_result_list = run_neo4j_query(driver, season_query)
+    # Step 1: Select a School
+    school_query = "MATCH (s:School) RETURN s.name AS name ORDER BY name"
+    school_result_list = run_neo4j_query(driver, school_query)
+    school_names = [record['name'] for record in school_result_list]
+    selected_school = st.selectbox('Select a School', school_names)
 
-    # Extract school names from the result
-    season_names = [record['name'] for record in season_result_list]
-
-    # Dropdown to select a school
-    selected_school = st.selectbox('Select a Season', season_names)
-
-    # Query to find the players on the roster of the selected season
+    # For simplicity, assume we're looking for players in the most recent Season of the Program
+    # This query may need adjustment based on your schema, especially how you define "most recent"
     roster_query = f"""
-    MATCH (s:Season {{name: '{selected_season}'}})<-[:ON_ROSTER]-(p:Player)
-    RETURN p.name AS player_name ORDER BY player_name
+    MATCH (s:School {{name: '{selected_school}'}})-[:HAS_PROGRAM]->(p:Program)
+    -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
+    RETURN season.name AS seasonName, player.name AS playerName
+    ORDER BY season.year DESC, playerName
     """
     roster_result = run_neo4j_query(driver, roster_query)
 
     # Display the roster
     if roster_result:
-        st.write(f"### Roster for {selected_season}:")
+        st.write(f"### Roster for {selected_school}:")
+        # Assuming the first record is from the most recent season
+        most_recent_season = roster_result[0]['seasonYear']
+        st.write(f"#### Season: {most_recent_season}")
         for record in roster_result:
-            st.write(f"- {record['name']}")
+            if record['seasonYear'] == most_recent_season:
+                st.write(f"- {record['playerName']}")
     else:
-        st.write("No players found on this school's roster.")
+        st.write("No players found on this school's roster for the most recent season.")
 
 
 def find_player_hometown(driver):
