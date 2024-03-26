@@ -151,7 +151,7 @@ def main():
     elif action == "Find Specific Stat":
         find_specific_stat(driver)
     elif action == "Display School Roster":
-        search_whole_team(driver)
+        display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
 
