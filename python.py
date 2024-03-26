@@ -80,14 +80,14 @@ def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
     # Retrieve school names from Neo4j
-    school_query = "MATCH (s:Season) RETURN s.name AS name ORDER BY name"
-    school_result_list = run_neo4j_query(driver, school_query)
+    season_query = "MATCH (s:Season) RETURN s.name AS name ORDER BY name"
+    season_result_list = run_neo4j_query(driver, season_query)
 
     # Extract school names from the result
     season_names = [record['name'] for record in season_result_list]
 
     # Dropdown to select a school
-    selected_school = st.selectbox('Select a Season', school_names)
+    selected_school = st.selectbox('Select a Season', season_names)
 
     # Query to find the players on the roster of the selected season
     roster_query = f"""
