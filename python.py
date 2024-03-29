@@ -15,12 +15,11 @@ def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
 
 # Function to execute Neo4j queries
-def run_neo4j_query(driver, query):
+def run_neo4j_query(driver, query, parameters=None):
     with driver.session() as session:
-        result = session.run(query)
-        # Convert result set to a list
-        result_list = list(result)
-        return result_list
+        result = session.run(query, parameters)
+        return list(result)
+
 
 # Function to compare two players and display their properties in a table
 def compare_players(driver):
