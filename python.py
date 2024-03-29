@@ -95,10 +95,10 @@ def display_school_roster(driver):
 
     # Step 2: Fetch and Display the Roster for the Selected School
     program_query = """
-MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
-RETURN p.name AS programName
-"""
-program_result = run_neo4j_query(driver, program_query, {'schoolId': selected_school_id})
+    MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
+    RETURN p.name AS programName
+    """
+    program_result = run_neo4j_query(driver, program_query, {'schoolId': selected_school_id})
 
 if program_result:
     for record in program_result:
