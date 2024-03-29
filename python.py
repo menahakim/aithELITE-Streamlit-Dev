@@ -94,13 +94,18 @@ def display_school_roster(driver):
     st.write(f"Selected School ID: {selected_school_id}")  # This line can be commented out or removed after confirming it works
 
     # Step 2: Fetch and Display the Roster for the Selected School
-    roster_query = """
-    MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
-    -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
-    RETURN season.name AS seasonName, player.first_name + ' ' + player.last_name AS playerName
-    ORDER BY seasonName, playerName
-    """
-    roster_result = run_neo4j_query(driver, roster_query, {'schoolId': selected_school_id})
+    program_query = """
+MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
+RETURN p.name AS programName
+"""
+program_result = run_neo4j_query(driver, program_query, {'schoolId': selected_school_id})
+
+if program_result:
+    for record in program_result:
+        st.write(f"- {record['programName']}")
+else:
+    st.write("No programs found for this school.")
+
 
     if roster_result:
         st.write(f"### Roster for {selected_school_name}:")
