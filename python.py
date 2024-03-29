@@ -70,9 +70,55 @@ def display_properties(player):
     st.table(rows)
 
 # Function to find a specific stat
-def find_specific_stat(driver):
-    st.write("You selected 'Find Specific Stat'.")
-    # Your code for finding specific stats goes here
+class Neo4jConnection:
+    def __init__(self, uri, user, password):
+        self.__uri = uri
+        self.__user = user
+        self.__password = password
+        self.__driver = None
+        try:
+            self.__driver = GraphDatabase.driver(uri, auth=(user, password))
+        except Exception as e:
+            print("Failed to create the driver:", e)
+
+    def close(self):
+        if self.__driver is not None:
+            self.__driver.close()
+
+    def search_stats_by_name(self, query):
+        with self.__driver.session() as session:
+            result = session.read_transaction(self.__search_stats_by_name_tx, query)
+            return result
+
+    @staticmethod
+    def __search_stats_by_name_tx(tx, query):
+        query = f"(?i).*{query}.*"  # Case-insensitive regex search
+        cypher_query = (
+            "MATCH (s:Stat) "
+            "WHERE s.stat_name =~ $query "
+            "RETURN s.stat_name AS stat_name, s.id AS id, s.display_name AS display_name, s.category AS category"
+        )
+        result = tx.run(cypher_query, query=query)
+        return [{"stat_name": record["stat_name"], "id": record["id"], "display_name": record["display_name"], "category": record["category"]} for record in result]
+
+# Initialize connection
+neo4j_conn = Neo4jConnection(uri, user, password)
+
+# Streamlit UI
+st.title('Neo4j Stat Search')
+
+query = st.text_input("Enter stat name to search:")
+
+if query:
+    results = neo4j_conn.search_stats_by_name(query)
+    if results:
+        for result in results:
+            st.write(f"{result['display_name']} (ID: {result['id']}, Category: {result['category']})")
+    else:
+        st.write("No results found.")
+
+# Close Neo4j connection when done
+st.on_session_end(neo4j_conn.close)
 
 # Function to display school roster
 def display_school_roster(driver):
@@ -157,8 +203,8 @@ def main():
 
     if action == "Compare 2 Players":
         compare_players(driver)
-    elif action == "Find Specific Stat":
-        find_specific_stat(driver)
+    elif action == "Search Stats By Name":
+        search_stats_by_name(driver)
     elif action == "Display School Roster":
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
