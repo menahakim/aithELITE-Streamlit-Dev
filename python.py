@@ -79,28 +79,17 @@ def find_specific_stat(driver):
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
-    # Step 1: Select a School
-    school_query = "MATCH (s:School) RETURN s.name AS name ORDER BY name"
+    # Step 1: Select a School based on names but fetch and use IDs for querying
+    school_query = "MATCH (s:School) RETURN s.name AS name, s.id AS id ORDER BY name"
     school_result_list = run_neo4j_query(driver, school_query)
     school_names = [record['name'] for record in school_result_list]
-    selected_school = st.selectbox('Select a School', school_names)
+    school_ids = {record['name']: record['id'] for record in school_result_list}  # Map names to IDs
+    selected_school_name = st.selectbox('Select a School', school_names)
+    selected_school_id = school_ids[selected_school_name]  # Fetch the selected school's ID
 
-    # Step 2: Select a Program within the selected School
-    program_query = f"""
-    MATCH (s:School {{name: '{selected_school}'}})-[:HAS_PROGRAM]->(p:Program)
-    RETURN p.name AS name ORDER BY name
-    """
-    program_result_list = run_neo4j_query(driver, program_query)
-    if not program_result_list:
-        st.write("No programs found for this school.")
-        return
-
-    program_names = [record['name'] for record in program_result_list]
-    selected_program = st.selectbox('Select a Program', program_names)
-
-    # Adjusted query to fetch players from the selected program only
+    # Adjusted query using school's unique ID
     roster_query = f"""
-    MATCH (s:School {{name: '{selected_school}'}})-[:HAS_PROGRAM]->(p:Program {{name: '{selected_program}'}})
+    MATCH (s:School {{id: '{selected_school_id}'}})-[:HAS_PROGRAM]->(p:Program)
     -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
     RETURN season.name AS seasonName, player.first_name + ' ' + player.last_name AS playerName
     ORDER BY seasonName, playerName
@@ -109,7 +98,7 @@ def display_school_roster(driver):
 
     # Display the roster
     if roster_result:
-        st.write(f"### Roster for {selected_school}, Program: {selected_program}:")
+        st.write(f"### Roster for {selected_school_name}:")
         current_season = None
         for record in roster_result:
             if record['seasonName'] != current_season:
@@ -117,8 +106,7 @@ def display_school_roster(driver):
                 st.write(f"#### Season: {current_season}")
             st.write(f"- {record['playerName']}")
     else:
-        st.write(f"No players found on the roster for {selected_program}.")
-
+        st.write("No players found on this school's roster.")
 
 
 
