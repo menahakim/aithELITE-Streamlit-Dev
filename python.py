@@ -91,7 +91,7 @@ def display_school_roster(driver):
     selected_school_id = school_options[selected_school_name]
 
     # Displaying the selected School ID for debugging
-    # st.write(f"Selected School ID: {selected_school_id}")  # This line can be commented out or removed after confirming it works
+    st.write(f"Selected School ID: {selected_school_id}")  # This line can be commented out or removed after confirming it works
 
     # Step 2: Fetch and Display the Roster for the Selected School
     roster_query = """
