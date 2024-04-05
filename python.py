@@ -21,7 +21,7 @@ col1, col2 = st.columns([1, 8])  # Adjust the ratio as needed
 
 # Display the logo in the first column (left-most)
 with col1:
-    st.image(logo_path, width=100)
+    st.image("aitheletego.png", width=100)
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
