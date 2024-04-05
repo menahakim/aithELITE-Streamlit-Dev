@@ -14,14 +14,6 @@ password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 logo_path = "images/aitheletego.png"
 st.image("images/aitheletego.png", width=150)  # Adjust width as needed
 
-logo_path = os.path.join("images", "aitheletego.png")
-
-# Create two columns with different widths
-col1, col2 = st.columns([1, 8])  # Adjust the ratio as needed
-
-# Display the logo in the first column (left-most)
-with col1:
-    st.image("aitheletego.png", width=100)
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
