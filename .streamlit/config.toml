@@ -1,6 +1,15 @@
 [theme]
+# Primary color for your app: blue for buttons, progress bars, etc.
 primaryColor = "#25a9f0"
-backgroundColor = "#555958"
-secondaryBackgroundColor = "#555958"
-textColor = "#FFFFFF"
+
+# Darker shade of gray for the main background for a sleek look
+backgroundColor = "#333739"
+
+# Slightly lighter shade of gray for secondary elements to add depth
+secondaryBackgroundColor = "#424548"
+
+# Use a lighter text color for better contrast and modern aesthetics
+textColor = "#E8E8E8"
+
+# Modern-looking sans serif font
 font = "sans serif"
