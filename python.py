@@ -73,8 +73,7 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
 
-# Function to find a specific stat
-import streamlit as st
+
 
 # Placeholder for your actual data retrieval function
 def get_player_data(player_name, session):
