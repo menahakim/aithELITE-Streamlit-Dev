@@ -186,8 +186,6 @@ def main():
 
     if action == "Compare 2 Players":
         compare_players(driver)
-    elif action == "Search Stats By Name":
-        find_specific_stat(driver)
     elif action == "Display School Roster":
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
