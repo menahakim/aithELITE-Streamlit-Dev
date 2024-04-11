@@ -102,6 +102,24 @@ def get_player_data(player_name, session):
     else:
         return None
 
+# Streamlit app starts here
+st.title('Player Yards Per Rush Finder')
+
+# User input for player name
+player_name = st.text_input("Enter Player Name:", "")
+
+if player_name:
+    # Retrieve player data
+    player_data = get_player_data(player_name, session)
+    
+    if player_data:
+        yards_per_rush = player_data['yds_per_rush']
+        rushing_attempts = player_data['rushing_attempts']
+        st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
+    else:
+        st.error("Player not found or no stats available. Please check the name and try again.")
+
+
 
 # Function to display school roster
 def display_school_roster(driver):
