@@ -188,7 +188,7 @@ def main():
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
     elif action == "Find Yards Per Rush for a Player":
-        get_player_data(driver)
+        find_yards_per_rush_for_player(driver)
 
 if __name__ == "__main__":
     main()
