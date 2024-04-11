@@ -73,6 +73,36 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
 
+def get_player_data(player_name, session):
+    """
+    Fetches yards per rush and rushing attempts for a specified player from the Neo4j database.
+    
+    Parameters:
+    - player_name: str, the name of the player to search for.
+    - session: Neo4j database session for executing the query.
+    
+    Returns:
+    - A dictionary with 'yds_per_rush' and 'rushing_attempts' if data is found, or None otherwise.
+    """
+    # Cypher query to fetch the player's yards per rush and rushing attempts
+    query = """
+    MATCH (p:Player)-[:PLAYS]->(:Position)-[:HAS_STAT]->(s:Stat)
+    WHERE p.name = $player_name
+    RETURN s.yds_per_rush AS yds_per_rush, s.rushing_attempts AS rushing_attempts
+    """
+    result = session.run(query, player_name=player_name)
+    record = result.single()  # Assuming there's only one record for each player
+
+    if record:
+        # Return the fetched data as a dictionary
+        return {
+            "yds_per_rush": record["yds_per_rush"],
+            "rushing_attempts": record["rushing_attempts"]
+        }
+    else:
+        # Return None if no data was found
+        return None
+
 
 def find_yards_per_rush_for_player(driver):
     st.write("You selected 'Find Yards Per Rush for a Player'.")
@@ -89,7 +119,7 @@ def find_yards_per_rush_for_player(driver):
     if st.button('Find Yards Per Rush'):
         # Assuming `session` should be created using the provided `driver`
         with driver.session() as session:
-            player_data = find_yards_per_rush_for_player(player_name, session)
+            player_data = get_player_data(player_name, session)
 
             if player_data:
                 yards_per_rush = player_data['yds_per_rush']
