@@ -102,9 +102,6 @@ def get_player_data(player_name, session):
     else:
         return None
 
-# Streamlit app starts here
-st.title('Player Yards Per Rush Finder')
-
 # User input for player name
 player_name = st.text_input("Enter Player Name:", "")
 
