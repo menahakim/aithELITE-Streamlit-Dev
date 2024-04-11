@@ -89,7 +89,7 @@ def find_yards_per_rush_for_player(driver):
     if st.button('Find Yards Per Rush'):
         # Assuming `session` should be created using the provided `driver`
         with driver.session() as session:
-            player_data = get_player_data(player_name, session)
+            player_data = find_yards_per_rush_for_player(player_name, session)
 
             if player_data:
                 yards_per_rush = player_data['yds_per_rush']
