@@ -203,6 +203,8 @@ def main():
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
+    elif action == "Get Player Data":
+        get_player_data(driver)
 
 if __name__ == "__main__":
     main()
