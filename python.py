@@ -74,8 +74,46 @@ def display_properties(player):
     st.table(rows)
 
 # Function to find a specific stat
-def find_specific_stat(driver):
-    st.write("You selected find a specific stat")
+import streamlit as st
+
+# Placeholder for your actual data retrieval function
+def get_player_data(player_name):
+    """
+    Retrieves the yards per rush and rushing attempts for a given player.
+    
+    Parameters:
+    - player_name: str
+    
+    Returns:
+    - dict: A dictionary with 'yds_per_rush' and 'rushing_attempts', or None if player not found.
+    """
+    # Your data retrieval logic here
+    # For demonstration, returning a dummy value
+    if player_name.lower() == "example player":
+        return {"yds_per_rush": 5.2, "rushing_attempts": 200}
+    else:
+        return None
+
+# Streamlit app starts here
+st.title('Player Yards Per Rush Finder')
+
+# User input for player name
+player_name = st.text_input("Enter Player Name:", "")
+
+if player_name:
+    # Retrieve player data
+    player_data = get_player_data(player_name)
+    
+    if player_data:
+        # Calculate yards per rush if 'rushing_attempts' is not zero to avoid division by zero error
+        if player_data['rushing_attempts'] > 0:
+            yards_per_rush = player_data['yds_per_rush']
+            st.success(f"Yards per rush for {player_name}: {yards_per_rush}")
+        else:
+            st.error("No rushing attempts found for this player.")
+    else:
+        st.error("Player not found. Please check the name and try again.")
+
 # Function to display school roster
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
