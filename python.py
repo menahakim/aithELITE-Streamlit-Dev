@@ -74,47 +74,29 @@ def display_properties(player):
     st.table(rows)
 
 
+def find_yards_per_rush_for_player(driver):
+    st.write("You selected 'Find Yards Per Rush for a Player'.")
 
-# Placeholder for your actual data retrieval function
-def get_player_data(player_name, session):
-    """
-    Retrieves the yards per rush and rushing attempts for a given player.
-    
-    Parameters:
-    - player_name: str
-    - session: Neo4j session
-    
-    Returns:
-    - dict: A dictionary with 'yds_per_rush' and 'rushing_attempts', or None if player not found.
-    """
-    query = """
-    MATCH (p:Player {name: $player_name})-[:PLAYS]->(:Position)-[:HAS_STAT]->(s:Stat)
-    RETURN s.yds_per_rush AS yds_per_rush, s.rushing_attempts AS rushing_attempts
-    """
-    result = session.run(query, player_name=player_name)
-    record = result.single()
-    
-    if record:
-        return {
-            "yds_per_rush": record["yds_per_rush"],
-            "rushing_attempts": record["rushing_attempts"]
-        }
-    else:
-        return None
+    # Fetch player names for the dropdown
+    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    result_list = run_neo4j_query(driver, query)
+    player_names = [record['name'] for record in result_list]
 
-# User input for player name
-player_name = st.text_input("Enter Player Name:", "")
+    # Dropdown to select a player
+    player_name = st.selectbox('Select a Player for Yards Per Rush', player_names, key='ypr_player')
 
-if player_name:
-    # Retrieve player data
-    player_data = get_player_data(player_name, session)
-    
-    if player_data:
-        yards_per_rush = player_data['yds_per_rush']
-        rushing_attempts = player_data['rushing_attempts']
-        st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
-    else:
-        st.error("Player not found or no stats available. Please check the name and try again.")
+    # Button to fetch data
+    if st.button('Find Yards Per Rush'):
+        # Assuming `session` should be created using the provided `driver`
+        with driver.session() as session:
+            player_data = get_player_data(player_name, session)
+
+            if player_data:
+                yards_per_rush = player_data['yds_per_rush']
+                rushing_attempts = player_data['rushing_attempts']
+                st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
+            else:
+                st.error("Player not found or no stats available. Please check the name and try again.")
 
 
 
@@ -205,7 +187,7 @@ def main():
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
-    elif action == "Get Player Data":
+    elif action == "Find Yards Per Rush for a Player":
         get_player_data(driver)
 
 if __name__ == "__main__":
