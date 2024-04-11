@@ -199,7 +199,7 @@ def main():
     # Dropdown menu to select action
     action = st.selectbox(
         "Select an action",
-        ["Compare 2 Players", "Find Specific Stat", "Display School Roster", "Find Player's Hometown"]
+        ["Compare 2 Players", "Display School Roster", "Find Player's Hometown", "Find Yards Per Rush for a Player"]
     )
 
     if action == "Compare 2 Players":
