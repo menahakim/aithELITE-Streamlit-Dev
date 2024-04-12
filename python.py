@@ -13,7 +13,6 @@ password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
-
 # Function to execute Neo4j queries
 def run_neo4j_query(driver, query):
     with driver.session() as session:
@@ -70,12 +69,64 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
 
+
 # Function to find a specific stat
 def find_specific_stat(driver):
+<<<<<<< Updated upstream
     st.write("You selected 'Find Specific Stat'.")
     # Your code for finding specific stats goes here
 
 # Function to display school roster
+=======
+    st.sidebar.write("You selected 'Find Specific Stat'.")
+
+    # Retrieve player names from Neo4j
+    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    result_list = run_neo4j_query(driver, query)
+
+    # Extract player names from the result
+    player_names = [record['name'] for record in result_list]
+
+    # Dropdown to select a player
+    player_name = st.sidebar.selectbox('Select a Player', player_names)
+
+    if player_name:
+        # Adjusted query to retrieve the player's specific stat
+        stat_query = f"""
+        MATCH (p:Player {{name: '{player_name}'}})
+        RETURN p.stat AS stat
+        """
+        stat_result = run_neo4j_query(driver, stat_query)
+
+        # Extract and display the stat if available
+        if stat_result:
+            stat = stat_result[0]['stat']
+            st.write(f"### {player_name}'s Specific Stat: {stat}")
+        else:
+            st.write("Stat not found.")
+
+        # Adjusted query to retrieve related stats
+        related_stats_query = f"""
+        MATCH (p:Player {{name: '{player_name}'}})-[:HAS_STAT]->(s:Stat)
+        RETURN s.name AS stat_name
+        """
+        related_stats_result = run_neo4j_query(driver, related_stats_query)
+
+        # Extract related stats
+        related_stats = [record['stat_name'] for record in related_stats_result]
+
+        # Dropdown to select related stats
+        selected_stat = st.sidebar.selectbox('Select a Related Stat', related_stats)
+
+        if selected_stat:
+            # Additional actions for the selected related stat
+            st.write(f"### Selected Related Stat: {selected_stat}")
+
+
+
+
+
+>>>>>>> Stashed changes
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
@@ -137,13 +188,13 @@ def find_player_hometown(driver):
         st.write("Hometown not found.")
 
 
-# Streamlit app
+# Streamlit app is here 
 def main():
     st.title("AithELITE Coach Helper")
 
     # Neo4j connection
     driver = connect_to_neo4j(uri, user, password)
-
+    #how is the day ended 
     # Dropdown menu to select action
     action = st.selectbox(
         "Select an action",
@@ -158,6 +209,9 @@ def main():
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
+    
 
 if __name__ == "__main__":
     main()
+
+
