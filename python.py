@@ -10,21 +10,25 @@ uri = "neo4j+s://722a0a63.databases.neo4j.io:7687"
 user = "neo4j"
 password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 
+
+logo_path = "images/aitheletego.png"
+st.image("images/aitheletego.png", width=150)  # Adjust width as needed
+
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
+
 # Function to execute Neo4j queries
-def run_neo4j_query(driver, query):
+def run_neo4j_query(driver, query, parameters=None):
     with driver.session() as session:
-        result = session.run(query)
-        # Convert result set to a list
-        result_list = list(result)
-        return result_list
+        result = session.run(query, parameters)
+        return list(result)
+
 
 # Function to compare two players and display their properties in a table
 def compare_players(driver):
     st.write("You selected 'Compare 2 Players'.")
-    
+   
     # Retrieve player names from Neo4j
     query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
@@ -69,86 +73,93 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
 
+def get_player_data(player_name, session):
+    """
+    Fetches yards per rush and rushing attempts for a specified player from the Neo4j database.
+   
+    Parameters:
+    - player_name: str, the name of the player to search for.
+    - session: Neo4j database session for executing the query.
+   
+    Returns:
+    - A dictionary with 'yds_per_rush' and 'rushing_attempts' if data is found, or None otherwise.
+    """
+    # Cypher query to fetch the player's yards per rush and rushing attempts
+    query = """
+    MATCH (p:Player)-[:PLAYS]->(:Position)-[:HAS_STAT]->(s:Stat)
+    WHERE p.name = $player_name
+    RETURN s.yds_per_rush AS yds_per_rush, s.rushing_attempts AS rushing_attempts
+    """
+    result = session.run(query, player_name=player_name)
+    record = result.single()  # Assuming there's only one record for each player
 
-# Function to find a specific stat
-def find_specific_stat(driver):
-<<<<<<< Updated upstream
-    st.write("You selected 'Find Specific Stat'.")
-    # Your code for finding specific stats goes here
+    if record:
+        # Return the fetched data as a dictionary
+        return {
+            "yds_per_rush": record["yds_per_rush"],
+            "rushing_attempts": record["rushing_attempts"]
+        }
+    else:
+        # Return None if no data was found
+        return None
 
-# Function to display school roster
-=======
-    st.sidebar.write("You selected 'Find Specific Stat'.")
 
-    # Retrieve player names from Neo4j
+def find_yards_per_rush_for_player(driver):
+    st.write("You selected 'Find Yards Per Rush for a Player'.")
+
+    # Fetch player names for the dropdown
     query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
-
-    # Extract player names from the result
     player_names = [record['name'] for record in result_list]
 
     # Dropdown to select a player
-    player_name = st.sidebar.selectbox('Select a Player', player_names)
+    player_name = st.selectbox('Select a Player for Yards Per Rush', player_names, key='ypr_player')
 
-    if player_name:
-        # Adjusted query to retrieve the player's specific stat
-        stat_query = f"""
-        MATCH (p:Player {{name: '{player_name}'}})
-        RETURN p.stat AS stat
-        """
-        stat_result = run_neo4j_query(driver, stat_query)
+    # Button to fetch data
+    if st.button('Find Yards Per Rush'):
+        # Assuming `session` should be created using the provided `driver`
+        with driver.session() as session:
+            player_data = get_player_data(player_name, session)
 
-        # Extract and display the stat if available
-        if stat_result:
-            stat = stat_result[0]['stat']
-            st.write(f"### {player_name}'s Specific Stat: {stat}")
-        else:
-            st.write("Stat not found.")
-
-        # Adjusted query to retrieve related stats
-        related_stats_query = f"""
-        MATCH (p:Player {{name: '{player_name}'}})-[:HAS_STAT]->(s:Stat)
-        RETURN s.name AS stat_name
-        """
-        related_stats_result = run_neo4j_query(driver, related_stats_query)
-
-        # Extract related stats
-        related_stats = [record['stat_name'] for record in related_stats_result]
-
-        # Dropdown to select related stats
-        selected_stat = st.sidebar.selectbox('Select a Related Stat', related_stats)
-
-        if selected_stat:
-            # Additional actions for the selected related stat
-            st.write(f"### Selected Related Stat: {selected_stat}")
+            if player_data:
+                yards_per_rush = player_data['yds_per_rush']
+                rushing_attempts = player_data['rushing_attempts']
+                st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
+            else:
+                st.error("Player not found or no stats available. Please check the name and try again.")
 
 
 
-
-
->>>>>>> Stashed changes
+# Function to display school roster
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
-    # Step 1: Select a School
-    school_query = "MATCH (s:School) RETURN s.name AS name ORDER BY name"
+    # Step 1: Select a School (existing code)
+    school_query = "MATCH (s:School) RETURN s.name AS name, s.id AS id ORDER BY name"
     school_result_list = run_neo4j_query(driver, school_query)
-    school_names = [record['name'] for record in school_result_list]
-    selected_school = st.selectbox('Select a School', school_names)
+   
+    if not school_result_list:
+        st.write("No schools found.")
+        return
+   
+    school_options = {record['name']: record['id'] for record in school_result_list}
+    selected_school_name = st.selectbox('Select a School', list(school_options.keys()))
+    selected_school_id = school_options[selected_school_name]
 
-    # Adjusted query using season.name and concatenating player's first_name and last_name
-    roster_query = f"""
-    MATCH (s:School {{name: '{selected_school}'}})-[:HAS_PROGRAM]->(p:Program)
+    # Displaying the selected School ID for debugging
+    st.write(f"Selected School ID: {selected_school_id}")  # This line can be commented out or removed after confirming it works
+
+    # Step 2: Fetch and Display the Roster for the Selected School
+    roster_query = """
+    MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
     -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
     RETURN season.name AS seasonName, player.first_name + ' ' + player.last_name AS playerName
     ORDER BY seasonName, playerName
     """
-    roster_result = run_neo4j_query(driver, roster_query)
+    roster_result = run_neo4j_query(driver, roster_query, {'schoolId': selected_school_id})
 
-    # Display the roster
     if roster_result:
-        st.write(f"### Roster for {selected_school}:")
-        # Display players grouped by season
+        st.write(f"### Roster for {selected_school_name}:")
         current_season = None
         for record in roster_result:
             if record['seasonName'] != current_season:
@@ -157,7 +168,6 @@ def display_school_roster(driver):
             st.write(f"- {record['playerName']}")
     else:
         st.write("No players found on this school's roster.")
-
 
 
 def find_player_hometown(driver):
@@ -188,30 +198,27 @@ def find_player_hometown(driver):
         st.write("Hometown not found.")
 
 
-# Streamlit app is here 
+# Streamlit app
 def main():
     st.title("AithELITE Coach Helper")
 
     # Neo4j connection
     driver = connect_to_neo4j(uri, user, password)
-    #how is the day ended 
+
     # Dropdown menu to select action
     action = st.selectbox(
         "Select an action",
-        ["Compare 2 Players", "Find Specific Stat", "Display School Roster", "Find Player's Hometown"]
+        ["Compare 2 Players", "Display School Roster", "Find Player's Hometown", "Find Yards Per Rush for a Player"]
     )
 
     if action == "Compare 2 Players":
         compare_players(driver)
-    elif action == "Find Specific Stat":
-        find_specific_stat(driver)
     elif action == "Display School Roster":
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
-    
+    elif action == "Find Yards Per Rush for a Player":
+        find_yards_per_rush_for_player(driver)
 
 if __name__ == "__main__":
     main()
-
-
