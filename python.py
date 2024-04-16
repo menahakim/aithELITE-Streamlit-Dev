@@ -1,3 +1,6 @@
+#testing push
+
+
 import streamlit as st
 from neo4j import GraphDatabase
 import pandas as pd
@@ -9,11 +12,12 @@ password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 
 
 logo_path = "images/aitheletego.png"
-st.image("images/aitheletego.png", width=150)  # Adjust width as needed
+st.image("images/aitheletego.png", width=150)  
 
 # Function to connect to Neo4j
 def connect_to_neo4j(uri, user, password):
     return GraphDatabase.driver(uri, auth=(user, password))
+
 # Function to execute Neo4j queries
 def run_neo4j_query(driver, query, parameters=None):
     with driver.session() as session:
@@ -41,8 +45,8 @@ def compare_players(driver):
     st.write(f'### Player 2: {player2}')
 
     # Retrieve properties of the selected players
-    query_player1 = f"MATCH (p:Player {{name: '{player1}'}}) RETURN p"
-    query_player2 = f"MATCH (p:Player {{name: '{player2}'}}) RETURN p"
+    query_player1 = f"MATCH (p:Player {{team_roster_name: '{player1}'}}) RETURN p"
+    query_player2 = f"MATCH (p:Player {{team_roster_name: '{player2}'}}) RETURN p"
 
     result_player1 = run_neo4j_query(driver, query_player1)
     result_player2 = run_neo4j_query(driver, query_player2)
@@ -69,59 +73,80 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
 
+def get_player_data(player_name, session):
+    """
+    Fetches yards per rush and rushing attempts for a specified player from the Neo4j database.
+    
+    Parameters:
+    - player_name: str, the name of the player to search for.
+    - session: Neo4j database session for executing the query.
+    
+    Returns:
+    - A dictionary with 'yds_per_rush' and 'rushing_attempts' if data is found, or None otherwise.
+    """
+    # Cypher query to fetch the player's yards per rush and rushing attempts
+    query = """
+    MATCH (p:Player)-[:PLAYS]->(:Position)-[:HAS_STAT]->(s:Stat)
+    WHERE p.team_roster_name = $player_name
+    RETURN s.yds_per_rush AS yds_per_rush, s.rushing_attempts AS rushing_attempts
+    """
+    result = session.run(query, player_name=player_name)
+    record = result.single()  # Assuming there's only one record for each player
 
-# Function to find a specific stat
-def find_specific_stat(driver):
-    st.sidebar.write("You selected 'Find Specific Stat'.")
+    if record:
+        # Return the fetched data as a dictionary
+        return {
+            "yds_per_rush": record["yds_per_rush"],
+            "rushing_attempts": record["rushing_attempts"]
+        }
+    else:
+        # Return None if no data was found
+        return None
+def get_player_data_with_relationship(player_name, session):
+    query = """
+       MATCH (p:Player)-[:HAS_STAT_VALUE]->(s:StatValue)
+        WHERE p.name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
+        RETURN s.stat_value 
+    """
+    result = session.run(query, player_name=player_name)
+    record = result.single()
 
-    # Retrieve player names from Neo4j
+    if record:
+        return {
+            'yds_per_rush': record['yds_per_rush'],
+            'rushing_attempts': record['rushing_attempts']
+        }
+    else:
+        return None
+
+def find_yards_per_rush_for_player(driver):
+    st.write("You selected 'Find Yards Per Rush for a Player'.")
+
+    # Fetch player names for the dropdown
     query = "MATCH (p:Player) RETURN p.team_roster_name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
-
-    # Extract player names from the result
     player_names = [record['name'] for record in result_list]
 
     # Dropdown to select a player
-    player_name = st.sidebar.selectbox('Select a Player', player_names)
+    player_name = st.selectbox('Select a Player for Yards Per Rush', player_names, key='ypr_player')
 
-    if player_name:
-        # Adjusted query to retrieve the player's specific stat
-        stat_query = f"""
-        MATCH (p:Player {{name: '{player_name}'}})
-        RETURN p.stat AS stat
-        """
-        stat_result = run_neo4j_query(driver, stat_query)
+    # Button to fetch data
+    if st.button('Find Yards Per Rush'):
+        # Assuming `session` should be created usinag the provided `driver`
+        with driver.session() as session:
+            player_data = get_player_data_with_relationship(player_name, session)
 
-        # Extract and display the stat if available
-        if stat_result:
-            stat = stat_result[0]['stat']
-            st.write(f"### {player_name}'s Specific Stat: {stat}")
-        else:
-            st.write("Stat not found.")
-
-        # Adjusted query to retrieve related stats
-        related_stats_query = f"""
-        MATCH (p:Player {{name: '{player_name}'}})-[:HAS_STAT]->(s:Stat)
-        RETURN s.name AS stat_name
-        """
-        related_stats_result = run_neo4j_query(driver, related_stats_query)
-
-        # Extract related stats
-        related_stats = [record['stat_name'] for record in related_stats_result]
-
-        # Dropdown to select related stats
-        selected_stat = st.sidebar.selectbox('Select a Related Stat', related_stats)
-
-        if selected_stat:
-            # Additional actions for the selected related stat
-            st.write(f"### Selected Related Stat: {selected_stat}")
-
-
+            if player_data:
+                yards_per_rush = player_data['yds_per_rush']
+                rushing_attempts = player_data['rushing_attempts']
+                st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
+            else:
+                st.error("Player not found or no stats available. Please check the name and try again.")
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
     # Step 1: Select a School (existing code)
-    school_query = "MATCH (s:School) RETURN s.name AS name, s.id AS id ORDER BY name"
+    school_query = "MATCH (s:School) RETURN s.team_roster_name AS name, s.id AS id ORDER BY name"
     school_result_list = run_neo4j_query(driver, school_query)
     
     if not school_result_list:
@@ -155,6 +180,7 @@ def display_school_roster(driver):
     else:
         st.write("No players found on this school's roster.")
 
+
 def find_player_hometown(driver):
     st.write("You selected 'Find Player's Hometown'.")
 
@@ -163,54 +189,47 @@ def find_player_hometown(driver):
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
-    if result_list:
-        player_names = [record['name'] for record in result_list]
+    player_names = [record['name'] for record in result_list]
+
+    # Dropdown to select a player
+    player_name = st.selectbox('Select a Player', player_names)
+
+    # Adjusted query to retrieve the player's home_town_id property
+    hometown_query = f"""
+    MATCH (p:Player {{team_roster_name: '{player_name}'}})
+    RETURN p.home_town_id AS hometown
+    """
+    hometown_result = run_neo4j_query(driver, hometown_query)
+
+    # Extract and display the hometown if available
+    if hometown_result:
+        hometown = hometown_result[0]['hometown']
+        st.write(f"### {player_name}'s Hometown: {hometown}")
     else:
-        player_names = []
-
-    if player_names:
-        # Dropdown to select a player
-        player_name = st.selectbox('Select a Player', player_names)
-
-        # Adjusted query to retrieve the player's home_town_id property using the selected player name
-        hometown_query = f"""
-        MATCH (p:Player {{team_roster_name: '{player_name}'}})
-        RETURN p.home_town_id AS hometown
-        """
-        hometown_result = run_neo4j_query(driver, hometown_query)
-
-        # Extract and display the hometown if available
-        if hometown_result and hometown_result[0]['hometown']:
-            hometown = hometown_result[0]['hometown']
-            st.write(f"### {player_name}'s Hometown: {hometown}")
-        else:
-            st.write("Hometown not found.")
-    else:
-        st.write("No players found in the database.")
+        st.write("Hometown not found.")
 
 
-# Streamlit app is here 
+# Streamlit app
 def main():
     st.title("AithELITE Coach Helper")
 
     # Neo4j connection
     driver = connect_to_neo4j(uri, user, password)
-    #how is the day ended 
+
     # Dropdown menu to select action
     action = st.selectbox(
         "Select an action",
-        ["Compare 2 Players", "Find Specific Stat", "Display School Roster", "Find Player's Hometown"]
+        ["Compare 2 Players", "Display School Roster", "Find Player's Hometown", "Find Yards Per Rush for a Player"]
     )
 
     if action == "Compare 2 Players":
         compare_players(driver)
-    elif action == "Search Stats By Name":
-        find_specific_stat(driver)
     elif action == "Display School Roster":
         display_school_roster(driver)
     elif action == "Find Player's Hometown":
         find_player_hometown(driver)
-    
+    elif action == "Find Yards Per Rush for a Player":
+        find_yards_per_rush_for_player(driver)
 
 if __name__ == "__main__":
     main()
