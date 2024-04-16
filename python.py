@@ -177,7 +177,7 @@ def find_player_hometown(driver):
 
         # Adjusted query to retrieve the player's home_town_id property using the selected player name
         hometown_query = f"""
-        MATCH (p:Player {{name: '{player_name}'}})
+        MATCH (p:Player {{team_roster_name: '{player_name}'}})
         RETURN p.home_town_id AS hometown
         """
         hometown_result = run_neo4j_query(driver, hometown_query)
