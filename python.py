@@ -117,9 +117,6 @@ def find_specific_stat(driver):
             st.write(f"### Selected Related Stat: {selected_stat}")
 
 
-
-
-
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
@@ -190,9 +187,6 @@ def find_player_hometown(driver):
             st.write("Hometown not found.")
     else:
         st.write("No players found in the database.")
-
-
-
 
 
 # Streamlit app is here 
