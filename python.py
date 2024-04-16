@@ -162,7 +162,7 @@ def find_player_hometown(driver):
     st.write("You selected 'Find Player's Hometown'.")
 
     # Retrieve player names from Neo4j
-    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    query = "MATCH (p:Player) RETURN p.team_roster_name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
