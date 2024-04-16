@@ -175,7 +175,7 @@ def find_player_hometown(driver):
     # Adjusted query to retrieve the player's home_town_id property
     hometown_query = f"""
     MATCH (p:Player)
-    WHERE p.team_roster_name = 'Specific Team Name'
+    WHERE p.team_roster_name = 'p.name'
     RETURN p.name, p.home_town_id
 
     """
