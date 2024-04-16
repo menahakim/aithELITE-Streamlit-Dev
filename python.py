@@ -30,7 +30,7 @@ def compare_players(driver):
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
-    player_names = [record['name'] for record in result_list]
+    player_names = [record['p.team_roster_name'] for record in result_list]
 
     # Dropdowns to select two players
     player1 = st.selectbox('Select Player 1', player_names)
