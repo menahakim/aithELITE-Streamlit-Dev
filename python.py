@@ -166,7 +166,10 @@ def find_player_hometown(driver):
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
-    player_names = [record['name'] for record in result_list]
+    if result_list:
+        player_names = [record['name'] for record in result_list]
+    else:
+        player_names = []
 
     if player_names:
         # Dropdown to select a player
@@ -187,6 +190,7 @@ def find_player_hometown(driver):
             st.write("Hometown not found.")
     else:
         st.write("No players found in the database.")
+
 
 
 
