@@ -6,9 +6,9 @@ from neo4j import GraphDatabase
 import pandas as pd
 
 # Neo4j connection parameters
-uri = ""
-user = ""
-password = ""
+uri = "neo4j+s://722a0a63.databases.neo4j.io:7687"
+user = "neo4j"
+password = "1z9uUXRk4_WQxCbSpJE3qFiJPqRZPeyTXjyFa5kqeZA"
 
 
 logo_path = "images/aitheletego.png"
