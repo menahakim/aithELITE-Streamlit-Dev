@@ -158,7 +158,6 @@ def display_school_roster(driver):
     else:
         st.write("No players found on this school's roster.")
 
-
 def find_player_hometown(driver):
     st.write("You selected 'Find Player's Hometown'.")
 
@@ -169,24 +168,27 @@ def find_player_hometown(driver):
     # Extract player names from the result
     player_names = [record['name'] for record in result_list]
 
-    # Dropdown to select a player
-    player_name = st.selectbox('Select a Player', player_names)
+    if player_names:
+        # Dropdown to select a player
+        player_name = st.selectbox('Select a Player', player_names)
 
-    # Adjusted query to retrieve the player's home_town_id property
-    hometown_query = f"""
-    MATCH (p:Player)
-    WHERE p.team_roster_name = 'p.name'
-    RETURN p.name, p.home_town_id
+        # Adjusted query to retrieve the player's home_town_id property using the selected player name
+        hometown_query = f"""
+        MATCH (p:Player {{name: '{player_name}'}})
+        RETURN p.home_town_id AS hometown
+        """
+        hometown_result = run_neo4j_query(driver, hometown_query)
 
-    """
-    hometown_result = run_neo4j_query(driver, hometown_query)
-
-    # Extract and display the hometown if available
-    if hometown_result:
-        hometown = hometown_result[0]['hometown']
-        st.write(f"### {player_name}'s Hometown: {hometown}")
+        # Extract and display the hometown if available
+        if hometown_result and hometown_result[0]['hometown']:
+            hometown = hometown_result[0]['hometown']
+            st.write(f"### {player_name}'s Hometown: {hometown}")
+        else:
+            st.write("Hometown not found.")
     else:
-        st.write("Hometown not found.")
+        st.write("No players found in the database.")
+
+
 
 
 # Streamlit app is here 
