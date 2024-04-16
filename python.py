@@ -26,7 +26,7 @@ def compare_players(driver):
     st.write("You selected 'Compare 2 Players'.")
     
     # Retrieve player names from Neo4j
-    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    query = "MATCH (p:Player) RETURN p.team_roster_name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
@@ -75,7 +75,7 @@ def find_specific_stat(driver):
     st.sidebar.write("You selected 'Find Specific Stat'.")
 
     # Retrieve player names from Neo4j
-    query = "MATCH (p:Player) RETURN p.name AS name ORDER BY name"
+    query = "MATCH (p:Player) RETURN p.team_roster_name AS name ORDER BY name"
     result_list = run_neo4j_query(driver, query)
 
     # Extract player names from the result
