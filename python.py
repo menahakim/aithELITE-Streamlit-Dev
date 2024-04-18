@@ -105,7 +105,7 @@ def get_player_data(player_name, session):
 def get_player_data_with_relationship(player_name, session):
     query = """
        MATCH (p:Player)-[:HAS_STAT_VALUE]->(s:StatValue)
-        WHERE p.name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
+        WHERE p.team_roster_name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
         RETURN s.stat_value 
     """
     result = session.run(query, player_name=player_name)
