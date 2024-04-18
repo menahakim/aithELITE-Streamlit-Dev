@@ -103,21 +103,25 @@ def get_player_data(player_name, session):
         # Return None if no data was found
         return None
 def get_player_data_with_relationship(player_name, session):
+    # Updated query to handle multiple stat records
     query = """
-       MATCH (p:Player)-[:HAS_STAT_VALUE]->(s:StatValue)
-        WHERE p.team_roster_name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
-        RETURN s.stat_value 
+    MATCH (p:Player)-[:HAS_STAT_VALUE]->(s:StatValue)
+    WHERE p.team_roster_name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
+    RETURN collect({stat_name: s.stat_name, stat_value: s.stat_value}) AS stats
     """
     result = session.run(query, player_name=player_name)
-    record = result.single()
+    records = result.single()
 
-    if record:
+    if records:
+        # Creating a dictionary from the list of stat records
+        stats = {stat['stat_name']: stat['stat_value'] for stat in records['stats']}
         return {
-            'yds_per_rush': record['yds_per_rush'],
-            'rushing_attempts': record['rushing_attempts']
+            'yds_per_rush': stats.get('yds_per_rush'),
+            'rushing_attempts': stats.get('rushing_attempts')
         }
     else:
         return None
+
 
 def find_yards_per_rush_for_player(driver):
     st.write("You selected 'Find Yards Per Rush for a Player'.")
@@ -127,14 +131,19 @@ def find_yards_per_rush_for_player(driver):
     result_list = run_neo4j_query(driver, query)
     player_names = [record['name'] for record in result_list]
 
+    # Print debug information
+    print("Available player names:", player_names)
+
     # Dropdown to select a player
     player_name = st.selectbox('Select a Player for Yards Per Rush', player_names, key='ypr_player')
 
     # Button to fetch data
     if st.button('Find Yards Per Rush'):
-        # Assuming `session` should be created usinag the provided `driver`
         with driver.session() as session:
             player_data = get_player_data_with_relationship(player_name, session)
+
+            # Print debug information
+            print("Fetched player data:", player_data)
 
             if player_data:
                 yards_per_rush = player_data['yds_per_rush']
@@ -142,6 +151,8 @@ def find_yards_per_rush_for_player(driver):
                 st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
             else:
                 st.error("Player not found or no stats available. Please check the name and try again.")
+
+
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
