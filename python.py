@@ -89,11 +89,11 @@ def find_yards_per_rush_for_player(driver):
             RETURN p.team_roster_name AS name, s.stat_value AS value
             ORDER BY value DESC
             """
+            print("Executing query with threshold:", threshold)  # Debug print
             result = session.run(query, threshold=threshold)
             player_data = result.data()
 
-            # Print debug information
-            print("Fetched player data:", player_data)
+            print("Fetched player data:", player_data)  # Debug print
 
             if player_data:
                 # Display the results in a table
@@ -102,6 +102,8 @@ def find_yards_per_rush_for_player(driver):
                     st.write(f"{player['name']} - {player['value']}")
             else:
                 st.error("No players found with yards per rush above the specified threshold. Try a lower value.")
+
+
 
 
 
