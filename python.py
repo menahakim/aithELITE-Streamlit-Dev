@@ -85,7 +85,7 @@ def find_yards_per_rush_for_player(driver):
         with driver.session() as session:
             query = """
             MATCH (p:Player)-[r:HAS_STAT_VALUE]->(s:`Stat Value`)
-            WHERE s.stat_name = 'yds_per_rush' AND toInteger(s.stat_value) > $threshold
+            WHERE s.stat_name = 'yds_per_rush' AND toFloat(s.stat_value) > $threshold
             RETURN p.team_roster_name AS name, s.stat_value AS value
             ORDER BY value DESC
             """
