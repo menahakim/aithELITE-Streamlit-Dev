@@ -103,15 +103,11 @@ def find_yards_per_rush_for_player(driver):
             else:
                 st.error("No players found with yards per rush above the specified threshold. Try a lower value.")
 
-
-
-
-
 def display_school_roster(driver):
     st.write("You selected 'Display School Roster'.")
 
-    # Step 1: Select a School (existing code)
-    school_query = "MATCH (s:School) RETURN s.team_roster_name AS name, s.id AS id ORDER BY name"
+    # Step 1: Select a School
+    school_query = "MATCH (s:School) RETURN s.name AS name, s.id AS id ORDER BY name"  # Assuming field is s.name not s.team_roster_name
     school_result_list = run_neo4j_query(driver, school_query)
     
     if not school_result_list:
@@ -122,15 +118,12 @@ def display_school_roster(driver):
     selected_school_name = st.selectbox('Select a School', list(school_options.keys()))
     selected_school_id = school_options[selected_school_name]
 
-    # Displaying the selected School ID for debugging
-    st.write(f"Selected School ID: {selected_school_id}")  # This line can be commented out or removed after confirming it works
-
     # Step 2: Fetch and Display the Roster for the Selected School
     roster_query = """
     MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
     -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
-    RETURN season.name AS seasonName, player.first_name + ' ' + player.last_name AS playerName
-    ORDER BY seasonName, playerName
+    RETURN season.year AS seasonYear, player.first_name + ' ' + player.last_name AS playerName
+    ORDER BY seasonYear, playerName
     """
     roster_result = run_neo4j_query(driver, roster_query, {'schoolId': selected_school_id})
 
@@ -138,12 +131,13 @@ def display_school_roster(driver):
         st.write(f"### Roster for {selected_school_name}:")
         current_season = None
         for record in roster_result:
-            if record['seasonName'] != current_season:
-                current_season = record['seasonName']
+            if record['seasonYear'] != current_season:
+                current_season = record['seasonYear']
                 st.write(f"#### Season: {current_season}")
             st.write(f"- {record['playerName']}")
     else:
         st.write("No players found on this school's roster.")
+
 
 
 def find_player_hometown(driver):
