@@ -73,44 +73,36 @@ def display_properties(player):
         rows.append([prop, player[prop]])
     st.table(rows)
     
+
 def find_yards_per_rush_for_player(driver):
     st.write("You selected 'Find Yards Per Rush for a Player'.")
 
-    # Fetch player names for the dropdown
-    query = "MATCH (p:Player) RETURN p.team_roster_name AS name ORDER BY name"
-    result_list = run_neo4j_query(driver, query)
-    player_names = [record['name'] for record in result_list]
+    # Input for stat value threshold
+    threshold = st.number_input('Enter a minimum stat value threshold:', min_value=0.0, value=2.0, step=0.1, format="%.1f")
 
-    # Print debug information
-    print("Available player names:", player_names)
-
-    # Dropdown to select a player
-    player_name = st.selectbox('Select a Player for Yards Per Rush', player_names, key='ypr_player')
-
-    # Button to fetch data
-    if st.button('Find Yards Per Rush'):
+    # Button to fetch and display players
+    if st.button('Find Players'):
         with driver.session() as session:
             query = """
             MATCH (p:Player)-[r:HAS_STAT_VALUE]->(s:`Stat Value`)
-            WHERE p.team_roster_name = $name AND (s.stat_name = 'yds_per_rush' OR s.stat_value > 2)
-            RETURN s.stat_name AS stat_name, s.stat_value AS stat_value
+            WHERE s.stat_name = 'yds_per_rush' AND s.stat_value > $threshold
+            RETURN p.team_roster_name AS name, s.stat_value AS value
+            ORDER BY value DESC
             """
-            result = session.run(query, name=player_name)
+            result = session.run(query, threshold=threshold)
             player_data = result.data()
 
             # Print debug information
             print("Fetched player data:", player_data)
 
             if player_data:
-                # Filter results to get yards per rush and possibly other stats
-                yds_per_rush_data = next((item for item in player_data if item['stat_name'] == 'yds_per_rush'), None)
-                if yds_per_rush_data:
-                    yards_per_rush = yds_per_rush_data['stat_value']
-                    st.success(f"Yards per rush for {player_name}: {yards_per_rush}")
-                else:
-                    st.error("Yards per rush stat not available for this player.")
+                # Display the results in a table
+                st.write("Players with yards per rush above the threshold:")
+                for player in player_data:
+                    st.write(f"{player['name']} - {player['value']}")
             else:
-                st.error("Player not found or no stats available. Please check the name and try again.")
+                st.error("No players found with yards per rush above the specified threshold. Try a lower value.")
+
 
 
 def display_school_roster(driver):
