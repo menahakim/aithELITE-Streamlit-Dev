@@ -72,57 +72,7 @@ def display_properties(player):
     for prop in properties:
         rows.append([prop, player[prop]])
     st.table(rows)
-
-def get_player_data(player_name, session):
-    """
-    Fetches yards per rush and rushing attempts for a specified player from the Neo4j database.
     
-    Parameters:
-    - player_name: str, the name of the player to search for.
-    - session: Neo4j database session for executing the query.
-    
-    Returns:
-    - A dictionary with 'yds_per_rush' and 'rushing_attempts' if data is found, or None otherwise.
-    """
-    # Cypher query to fetch the player's yards per rush and rushing attempts
-    query = """
-    MATCH (p:Player)-[:PLAYS]->(:Position)-[:HAS_STAT]->(s:Stat)
-    WHERE p.team_roster_name = $player_name
-    RETURN s.yds_per_rush AS yds_per_rush, s.rushing_attempts AS rushing_attempts
-    """
-    result = session.run(query, player_name=player_name)
-    record = result.single()  # Assuming there's only one record for each player
-
-    if record:
-        # Return the fetched data as a dictionary
-        return {
-            "yds_per_rush": record["yds_per_rush"],
-            "rushing_attempts": record["rushing_attempts"]
-        }
-    else:
-        # Return None if no data was found
-        return None
-def get_player_data_with_relationship(player_name, session):
-    # Updated query to handle multiple stat records
-    query = """
-    MATCH (p:Player)-[:HAS_STAT_VALUE]->(s:StatValue)
-    WHERE p.team_roster_name = $player_name AND (s.stat_name = 'yds_per_rush' OR s.stat_name = 'rushing_attempts')
-    RETURN collect({stat_name: s.stat_name, stat_value: s.stat_value}) AS stats
-    """
-    result = session.run(query, player_name=player_name)
-    records = result.single()
-
-    if records:
-        # Creating a dictionary from the list of stat records
-        stats = {stat['stat_name']: stat['stat_value'] for stat in records['stats']}
-        return {
-            'yds_per_rush': stats.get('yds_per_rush'),
-            'rushing_attempts': stats.get('rushing_attempts')
-        }
-    else:
-        return None
-
-
 def find_yards_per_rush_for_player(driver):
     st.write("You selected 'Find Yards Per Rush for a Player'.")
 
@@ -140,15 +90,25 @@ def find_yards_per_rush_for_player(driver):
     # Button to fetch data
     if st.button('Find Yards Per Rush'):
         with driver.session() as session:
-            player_data = get_player_data_with_relationship(player_name, session)
+            query = """
+            MATCH (p:Player)-[r:HAS_STAT_VALUE]->(s:`Stat Value`)
+            WHERE p.team_roster_name = $name AND (s.stat_name = 'yds_per_rush' OR s.stat_value > 2)
+            RETURN s.stat_name AS stat_name, s.stat_value AS stat_value
+            """
+            result = session.run(query, name=player_name)
+            player_data = result.data()
 
             # Print debug information
             print("Fetched player data:", player_data)
 
             if player_data:
-                yards_per_rush = player_data['yds_per_rush']
-                rushing_attempts = player_data['rushing_attempts']
-                st.success(f"Yards per rush for {player_name}: {yards_per_rush}, based on {rushing_attempts} attempts.")
+                # Filter results to get yards per rush and possibly other stats
+                yds_per_rush_data = next((item for item in player_data if item['stat_name'] == 'yds_per_rush'), None)
+                if yds_per_rush_data:
+                    yards_per_rush = yds_per_rush_data['stat_value']
+                    st.success(f"Yards per rush for {player_name}: {yards_per_rush}")
+                else:
+                    st.error("Yards per rush stat not available for this player.")
             else:
                 st.error("Player not found or no stats available. Please check the name and try again.")
 
