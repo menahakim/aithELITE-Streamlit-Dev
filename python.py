@@ -122,7 +122,7 @@ def display_school_roster(driver):
     roster_query = """
     MATCH (s:School {id: $schoolId})-[:HAS_PROGRAM]->(p:Program)
     -[:HAS_SEASON]->(season:Season)-[:ON_ROSTER]->(player:Player)
-    RETURN season.year AS seasonYear, player.first_name + ' ' + player.last_name AS playerName
+    RETURN season.year AS seasonYear, player.team_roster_name AS playerName
     ORDER BY seasonYear, playerName
     """
     roster_result = run_neo4j_query(driver, roster_query, {'schoolId': selected_school_id})
